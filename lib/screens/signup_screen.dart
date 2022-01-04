@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:information/screens/login_screen.dart';
+import 'package:information/screens/user_list.dart';
+import 'package:information/screens/user_profile.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -11,6 +14,39 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   bool _isObscure = true;
   int _value = 1;
+  bool isloading = false;
+  Future signup() async {
+    setState(() {
+      isloading = true;
+    });
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailcontroller.text,
+        password: passwordcontroller.text,
+      );
+      if (userCredential.user != null) {
+        Route route = MaterialPageRoute(builder: (context) => UserlistScreen());
+        Navigator.push(context, route);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        print('The account already exists for that email.');
+      }
+    } catch (e) {
+      print(e);
+    }
+    setState(() {
+      isloading = false;
+    });
+  }
+
+  TextEditingController? controller;
+  TextEditingController emailcontroller = TextEditingController();
+  TextEditingController passwordcontroller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,6 +175,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 13,
                   ),
                   TextField(
+                    controller: emailcontroller,
                     onTap: () {},
                     keyboardType: TextInputType.text,
                     decoration: InputDecoration(
@@ -164,6 +201,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     height: 12,
                   ),
                   TextField(
+                    controller: passwordcontroller,
                     // onTap: () {},
                     obscureText: _isObscure,
                     keyboardType: TextInputType.text,
@@ -296,27 +334,33 @@ class _SignupScreenState extends State<SignupScreen> {
                   SizedBox(
                     height: 20,
                   ),
-                  Container(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: Text(
-                        "Sign Up",
-                        style: TextStyle(
-                          fontSize: 17,
-                          letterSpacing: 1,
+                  isloading
+                      ? CircularProgressIndicator()
+                      : Container(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                signup();
+                              });
+                            },
+                            child: Text(
+                              "Sign Up",
+                              style: TextStyle(
+                                fontSize: 17,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.black,
+                              // padding: EdgeInsets.symmetric(
+                              //   horizontal: 160,
+                              //   vertical: 15,
+                              // ),
+                            ),
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.black,
-                        // padding: EdgeInsets.symmetric(
-                        //   horizontal: 160,
-                        //   vertical: 15,
-                        // ),
-                      ),
-                    ),
-                  ),
                   SizedBox(
                     height: 20,
                   ),
